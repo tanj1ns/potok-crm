@@ -4,13 +4,12 @@ import {
   ArrowRight,
   BarChart3,
   Kanban,
-  Menu,
+  Layers,
   MessageSquare,
   Moon,
   Plus,
   Search,
-  Sun,
-  X
+  Sun
 } from 'lucide-react';
 import { LEAD_SOURCES, MANAGERS, STAGES, crmApi, formatRub, isSecretAdminHash } from './api';
 import DealModal from './components/DealModal';
@@ -19,8 +18,7 @@ import AdminCrm from './pages/AdminCrm';
 import CookieBanner, { setCookie } from './components/CookieBanner';
 
 export default function App() {
-  const [theme, setTheme] = useState(() => document.documentElement.getAttribute('data-theme') || 'dark');
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [theme, setTheme] = useState(() => document.documentElement.getAttribute('data-theme') || 'light');
 
   const [deals, setDeals] = useState([]);
   const [user, setUser] = useState(null);
@@ -80,15 +78,14 @@ export default function App() {
     const paidSum = deals
       .filter((d) => d.stage === 'paid' || d.stage === 'done')
       .reduce((s, d) => s + Number(d.budget || 0), 0);
-    const activeSum = deals
-      .filter((d) => d.stage === 'new' || d.stage === 'in_progress')
-      .reduce((s, d) => s + Number(d.budget || 0), 0);
+    const activeDeals = deals.filter((d) => d.stage === 'new' || d.stage === 'in_progress');
+    const activeSum = activeDeals.reduce((s, d) => s + Number(d.budget || 0), 0);
     const paidCount = deals.filter((d) => d.stage === 'paid' || d.stage === 'done').length;
     const conversion = deals.length ? Math.round((paidCount / deals.length) * 100) : 0;
     const avgCheck = deals.length
       ? Math.round(deals.reduce((s, d) => s + Number(d.budget || 0), 0) / deals.length)
       : 0;
-    return { paidSum, activeSum, conversion, avgCheck };
+    return { paidSum, activeSum, activeCount: activeDeals.length, conversion, avgCheck };
   }, [deals]);
 
   const activeDeal = useMemo(
@@ -128,76 +125,37 @@ export default function App() {
     ...LEAD_SOURCES.map((src) => deals.filter((d) => d.source === src).length)
   );
 
-  return (
-    <div className="app-shell">
-      <header className="header">
-        <div className="container header__inner">
-          <a
-            href="#board"
-            className="brand"
-            onClick={(e) => {
-              e.preventDefault();
-              if (isAdminRoute) {
+  function getInitials(name) {
+    return String(name || 'M')
+      .split(/\s+/)
+      .map((p) => p[0] || '')
+      .join('')
+      .slice(0, 2)
+      .toUpperCase();
+  }
+
+  if (isAdminRoute) {
+    return (
+      <div className="app-shell">
+        <header className="admin-topbar">
+          <div className="container admin-topbar__inner">
+            <a
+              href="#board"
+              className="brand"
+              onClick={(e) => {
+                e.preventDefault();
                 window.location.hash = '';
                 setIsAdminRoute(false);
-              }
-            }}
-          >
-            <span className="brand__icon">
-              <Kanban size={17} />
-            </span>
-            <span>ПОТОК CRM</span>
-          </a>
-
-          {!isAdminRoute && (
-            <nav className={`nav ${mobileMenuOpen ? 'is-open' : ''}`} aria-label="Разделы CRM">
-              <button
-                type="button"
-                className={`nav__link ${view === 'kanban' ? 'is-active' : ''}`}
-                onClick={() => {
-                  setView('kanban');
-                  setMobileMenuOpen(false);
-                }}
-              >
-                <Kanban size={15} /> Воронка сделок
-              </button>
-              <button
-                type="button"
-                className={`nav__link ${view === 'analytics' ? 'is-active' : ''}`}
-                onClick={() => {
-                  setView('analytics');
-                  setMobileMenuOpen(false);
-                }}
-              >
-                <BarChart3 size={15} /> Аналитика
-              </button>
-            </nav>
-          )}
-
-          <div className="header__right">
-            {!isAdminRoute && (
-              <button type="button" className="btn btn--primary btn--sm" onClick={() => setCreateOpen(true)}>
-                <Plus size={15} /> Новая заявка
-              </button>
-            )}
+              }}
+            >
+              <span className="brand__icon"><Kanban size={17} /></span>
+              <span>ПОТОК CRM</span>
+            </a>
             <button type="button" className="icon-btn" onClick={toggleTheme} aria-label="Переключить тему">
               {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
             </button>
-            {!isAdminRoute && (
-              <button
-                type="button"
-                className="icon-btn mobile-menu-btn"
-                onClick={() => setMobileMenuOpen((v) => !v)}
-                aria-label="Меню"
-              >
-                {mobileMenuOpen ? <X size={17} /> : <Menu size={17} />}
-              </button>
-            )}
           </div>
-        </div>
-      </header>
-
-      {isAdminRoute ? (
+        </header>
         <AdminCrm
           user={user}
           deals={deals}
@@ -208,8 +166,75 @@ export default function App() {
             setIsAdminRoute(false);
           }}
         />
-      ) : (
-        <main className="container workspace">
+      </div>
+    );
+  }
+
+  return (
+    <div className="crm-layout">
+      <aside className="crm-sidebar" aria-label="Рабочая область CRM">
+        <div className="crm-sidebar__top">
+          <a href="#board" className="brand" onClick={(e) => e.preventDefault()}>
+            <span className="brand__icon"><Kanban size={17} /></span>
+            <span className="brand__stack">
+              <strong>ПОТОК CRM</strong>
+              <small>Sales Workspace</small>
+            </span>
+          </a>
+
+          <div className="crm-mobile-actions">
+            <button type="button" className="btn btn--primary btn--sm" onClick={() => setCreateOpen(true)}>
+              <Plus size={14} /> Заявка
+            </button>
+            <button type="button" className="icon-btn" onClick={toggleTheme} aria-label="Переключить тему">
+              {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
+            </button>
+          </div>
+        </div>
+
+        <nav className="crm-nav" aria-label="Разделы CRM">
+          <button
+            type="button"
+            className={`crm-nav__item ${view === 'kanban' ? 'is-active' : ''}`}
+            onClick={() => setView('kanban')}
+          >
+            <Kanban size={16} /> Воронка сделок
+          </button>
+          <button
+            type="button"
+            className={`crm-nav__item ${view === 'analytics' ? 'is-active' : ''}`}
+            onClick={() => setView('analytics')}
+          >
+            <BarChart3 size={16} /> Аналитика
+          </button>
+        </nav>
+
+        <div className="crm-sidebar__extra">
+          <button type="button" className="btn btn--primary" style={{ width: '100%' }} onClick={() => setCreateOpen(true)}>
+            <Plus size={15} /> Новая заявка
+          </button>
+
+          <div className="funnel-mini">
+            <span className="funnel-mini__label">
+              <Layers size={14} /> Активная воронка
+            </span>
+            <strong className="mono">{metrics.activeCount} сделок</strong>
+            <small className="mono">{formatRub(metrics.activeSum)}</small>
+          </div>
+
+          <div className="crm-sidebar__foot">
+            <button type="button" className="icon-btn" onClick={toggleTheme} aria-label="Переключить тему">
+              {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
+            </button>
+            <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
+              {theme === 'dark' ? 'Тёмная тема' : 'Светлая тема'}
+            </span>
+          </div>
+        </div>
+      </aside>
+
+      <div className="crm-main">
+        <main className="workspace">
           <div className="kpi-grid">
             <div className="kpi-card">
               <span>Оплачено и завершено</span>
@@ -266,7 +291,7 @@ export default function App() {
                   return (
                     <section
                       key={stage.id}
-                      className="kanban-col"
+                      className={`kanban-col kanban-col--${stage.id}`}
                       onDragOver={(e) => e.preventDefault()}
                       onDrop={() => {
                         if (draggedId) {
@@ -308,7 +333,10 @@ export default function App() {
                               </span>
                             </div>
                             <div className="deal-card__actions">
-                              <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{deal.manager}</span>
+                              <span className="manager-pill">
+                                <span className="manager-badge mono">{getInitials(deal.manager)}</span>
+                                {deal.manager}
+                              </span>
                               <div style={{ display: 'flex', gap: 4 }}>
                                 <button
                                   type="button"
@@ -388,7 +416,20 @@ export default function App() {
             </div>
           )}
         </main>
-      )}
+
+        <footer className="footer">
+          <div className="footer__inner">
+            <span>&copy; 2026 ПОТОК CRM — Учёт сделок и воронки продаж</span>
+            <span className="footer__meta">
+              <span>React + Node.js + SQLite</span>
+              <span aria-hidden="true">·</span>
+              <button type="button" className="link-inline" onClick={() => setPrivacyOpen(true)}>Политика cookie</button>
+              <span aria-hidden="true">·</span>
+              <button type="button" className="link-inline" onClick={() => setCookieForceOpen(true)}>Настройки cookie</button>
+            </span>
+          </div>
+        </footer>
+      </div>
 
       {(activeDeal || createOpen) && (
         <DealModal
@@ -412,19 +453,6 @@ export default function App() {
         onCloseForce={() => setCookieForceOpen(false)}
         onOpenPrivacy={() => setPrivacyOpen(true)}
       />
-
-      <footer className="footer">
-        <div className="container footer__inner">
-          <span>&copy; 2026 ПОТОК CRM — Учёт сделок и воронки продаж</span>
-          <span className="footer__meta">
-            <span>React + Node.js + SQLite</span>
-            <span aria-hidden="true">·</span>
-            <button type="button" className="link-inline" onClick={() => setPrivacyOpen(true)}>Политика cookie</button>
-            <span aria-hidden="true">·</span>
-            <button type="button" className="link-inline" onClick={() => setCookieForceOpen(true)}>Настройки cookie</button>
-          </span>
-        </div>
-      </footer>
     </div>
   );
 }
