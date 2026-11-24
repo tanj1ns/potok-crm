@@ -16,6 +16,7 @@ import { LEAD_SOURCES, MANAGERS, STAGES, crmApi, formatRub, isSecretAdminHash } 
 import DealModal from './components/DealModal';
 import PrivacyModal from './components/PrivacyModal';
 import AdminCrm from './pages/AdminCrm';
+import CookieBanner, { setCookie } from './components/CookieBanner';
 
 export default function App() {
   const [theme, setTheme] = useState(() => document.documentElement.getAttribute('data-theme') || 'dark');
@@ -33,12 +34,14 @@ export default function App() {
   const [activeDealId, setActiveDealId] = useState(null);
   const [createOpen, setCreateOpen] = useState(false);
   const [privacyOpen, setPrivacyOpen] = useState(false);
+  const [cookieForceOpen, setCookieForceOpen] = useState(false);
   const [draggedId, setDraggedId] = useState(null);
 
   function toggleTheme() {
     const next = theme === 'dark' ? 'light' : 'dark';
     setTheme(next);
     document.documentElement.setAttribute('data-theme', next);
+    setCookie('potok_theme', next);
     try {
       localStorage.setItem('potok_theme', next);
     } catch {}
@@ -403,10 +406,23 @@ export default function App() {
 
       {privacyOpen && <PrivacyModal onClose={() => setPrivacyOpen(false)} />}
 
+      <CookieBanner
+        prefix="potok"
+        forceOpen={cookieForceOpen}
+        onCloseForce={() => setCookieForceOpen(false)}
+        onOpenPrivacy={() => setPrivacyOpen(true)}
+      />
+
       <footer className="footer">
         <div className="container footer__inner">
           <span>&copy; 2026 ПОТОК CRM — Учёт сделок и воронки продаж</span>
-          <span>React + Node.js + SQLite</span>
+          <span className="footer__meta">
+            <span>React + Node.js + SQLite</span>
+            <span aria-hidden="true">·</span>
+            <button type="button" className="link-inline" onClick={() => setPrivacyOpen(true)}>Политика cookie</button>
+            <span aria-hidden="true">·</span>
+            <button type="button" className="link-inline" onClick={() => setCookieForceOpen(true)}>Настройки cookie</button>
+          </span>
         </div>
       </footer>
     </div>

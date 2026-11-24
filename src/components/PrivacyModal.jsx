@@ -23,6 +23,9 @@ export default function PrivacyModal({ onClose }) {
           Создавая карточку заявки в «ПОТОК CRM», вы подтверждаете правомерность обработки контактных данных клиента (имя, компания, телефон) для ведения сделки, расчёта сметы и обратной связи по проекту.
         </p>
         <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', lineHeight: 1.6 }}>
+          Сайт также использует cookie (<span className="mono">SameSite=Lax</span>): техническую <span className="mono">HttpOnly</span>-сессию <span className="mono">potok_sid</span>, выбранную тему <span className="mono">potok_theme</span>, согласие <span className="mono">potok_cookie_consent</span> и необязательный cookie <span className="mono">potok_prefs</span> (удаляется при выборе «Только необходимые»).
+        </p>
+        <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', lineHeight: 1.6 }}>
           Данные обрабатываются в контуре компании и не передаются третьим лицам без основания, предусмотренного законодательством РФ.
         </p>
       </div>
