@@ -9,19 +9,38 @@ import {
   Moon,
   Plus,
   Search,
-  Sun
+  Sun,
+  User
 } from 'lucide-react';
 import { LEAD_SOURCES, MANAGERS, STAGES, crmApi, formatRub, isSecretAdminHash } from './api';
+import { createClientAuth } from './clientAuth';
 import DealModal from './components/DealModal';
 import PrivacyModal from './components/PrivacyModal';
 import AdminCrm from './pages/AdminCrm';
+import ClientCabinet from './components/ClientCabinet';
 import CookieBanner, { setCookie } from './components/CookieBanner';
+
+const potokClientAuth = createClientAuth({
+  prefix: 'potok',
+  demoSeed: {
+    name: 'Алексей Громов',
+    email: 'client@potok-crm.ru',
+    phone: '+7 (916) 510-22-41',
+    password: 'client12345',
+    meta: {
+      company: 'ТехноПром',
+      telegram: '@agromov_tp',
+      dealCodes: ['DL-1041']
+    }
+  }
+});
 
 export default function App() {
   const [theme, setTheme] = useState(() => document.documentElement.getAttribute('data-theme') || 'light');
 
   const [deals, setDeals] = useState([]);
   const [user, setUser] = useState(null);
+  const [client, setClient] = useState(null);
   const [isAdminRoute, setIsAdminRoute] = useState(false);
 
   const [view, setView] = useState('kanban');
@@ -55,6 +74,10 @@ export default function App() {
 
   useEffect(() => {
     refresh();
+    potokClientAuth
+      .me()
+      .then((res) => setClient(res.client || null))
+      .catch(() => {});
     async function syncHash() {
       const ok = await isSecretAdminHash(window.location.hash);
       setIsAdminRoute(ok);
@@ -114,6 +137,10 @@ export default function App() {
   async function handleCreateDeal(payload) {
     const res = await crmApi.createDeal(payload);
     setDeals((prev) => [res.deal, ...prev]);
+    if (client && res.deal?.code) {
+      const updated = await potokClientAuth.appendCode('dealCodes', res.deal.code).catch(() => null);
+      if (updated) setClient(updated);
+    }
   }
 
   const maxStageBudget = Math.max(
@@ -207,6 +234,13 @@ export default function App() {
           >
             <BarChart3 size={16} /> Аналитика
           </button>
+          <button
+            type="button"
+            className={`crm-nav__item ${view === 'account' ? 'is-active' : ''}`}
+            onClick={() => setView('account')}
+          >
+            <User size={16} /> Кабинет
+          </button>
         </nav>
 
         <div className="crm-sidebar__extra">
@@ -254,7 +288,18 @@ export default function App() {
             </div>
           </div>
 
-          {view === 'kanban' ? (
+          {view === 'account' ? (
+            <ClientCabinet
+              client={client}
+              clientAuth={potokClientAuth}
+              deals={deals}
+              onClientChange={setClient}
+              onAddNote={handleAddNote}
+              onOpenCreate={() => setCreateOpen(true)}
+              onBackToBoard={() => setView('kanban')}
+              onOpenPrivacy={() => setPrivacyOpen(true)}
+            />
+          ) : view === 'kanban' ? (
             <>
               <div className="toolbar">
                 <div className="search-wrap">
@@ -434,6 +479,7 @@ export default function App() {
       {(activeDeal || createOpen) && (
         <DealModal
           deal={activeDeal}
+          client={client}
           onClose={() => {
             setActiveDealId(null);
             setCreateOpen(false);

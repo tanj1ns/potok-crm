@@ -2,14 +2,14 @@ import React, { useEffect, useRef, useState } from 'react';
 import { MessageSquarePlus, Plus, X } from 'lucide-react';
 import { LEAD_SOURCES, MANAGERS, STAGES, formatPhone, formatRub } from '../api';
 
-export default function DealModal({ deal, onClose, onStageChange, onAddNote, onCreateDeal, onOpenPrivacy }) {
+export default function DealModal({ deal, client, onClose, onStageChange, onAddNote, onCreateDeal, onOpenPrivacy }) {
   const [noteText, setNoteText] = useState('');
   const [noteBusy, setNoteBusy] = useState(false);
 
   const [title, setTitle] = useState('');
-  const [clientName, setClientName] = useState('');
-  const [company, setCompany] = useState('');
-  const [phone, setPhone] = useState('');
+  const [clientName, setClientName] = useState(() => client?.name || '');
+  const [company, setCompany] = useState(() => client?.meta?.company || '');
+  const [phone, setPhone] = useState(() => client?.phone || '');
   const [source, setSource] = useState('Сайт');
   const [manager, setManager] = useState('Анна К.');
   const [budget, setBudget] = useState('120000');
@@ -22,7 +22,12 @@ export default function DealModal({ deal, onClose, onStageChange, onAddNote, onC
 
   useEffect(() => {
     openedAt.current = Date.now();
-  }, [deal]);
+    if (!deal && client) {
+      setClientName((prev) => prev || client.name || '');
+      setCompany((prev) => prev || client.meta?.company || '');
+      setPhone((prev) => prev || client.phone || '');
+    }
+  }, [deal, client]);
 
   useEffect(() => {
     const onKey = (e) => {
