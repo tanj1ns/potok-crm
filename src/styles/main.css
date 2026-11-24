@@ -197,16 +197,18 @@ button, input, select { font-family: inherit; }
 
 @media (max-width: 860px) {
   .crm-layout { grid-template-columns: 1fr; }
-  .crm-sidebar { position: sticky; top: 0; height: auto; z-index: 90; border-right: none; border-bottom: 1px solid var(--border); padding: 12px 16px; gap: 10px; }
+  .crm-sidebar { position: sticky; top: 0; height: auto; width: 100%; max-width: 100%; z-index: 90; border-right: none; border-bottom: 1px solid var(--border); padding: 12px 14px; gap: 10px; }
   .crm-sidebar__extra { display: none; }
   .crm-mobile-actions { display: inline-flex; }
-  .crm-nav { flex-direction: row; gap: 6px; }
-  .crm-nav__item { flex: 1; justify-content: center; padding: 8px 10px; background: var(--bg); border: 1px solid var(--border); }
-  .workspace { padding: 18px 16px 40px; }
-  .footer { padding: 16px; }
+  .crm-nav { flex-direction: row; gap: 6px; width: 100%; }
+  .crm-nav__item { flex: 1; min-width: 0; justify-content: center; padding: 8px 8px; background: var(--bg); border: 1px solid var(--border); }
+  .workspace { padding: 18px 14px 40px; }
+  .footer { padding: 16px 14px; }
 }
 
 @media (max-width: 680px) {
   .kpi-grid, .kanban-board, .form-grid, .deal-meta-grid { grid-template-columns: 1fr; }
-  .crm-nav__item { padding: 7px 6px; font-size: 0.78rem; white-space: nowrap; }
+  .crm-sidebar { padding: 10px 12px; }
+  .crm-nav { gap: 4px; }
+  .crm-nav__item { padding: 7px 4px; font-size: 0.74rem; gap: 5px; white-space: nowrap; }
 }
